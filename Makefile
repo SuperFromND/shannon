@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 all: dir
-	$(CXX) -o bin/example.exe src/main.cpp $(LDFLAGS)
+	$(CXX) -o bin/shannon.exe src/main.cpp $(LDFLAGS)
 
 dir:
 	if [ ! -d "./bin" ]; then mkdir -p bin; fi

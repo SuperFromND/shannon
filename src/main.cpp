@@ -26,7 +26,12 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
+#include <iostream>
+#include <filesystem>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include "font.h"
 
 using std::string;
@@ -34,11 +39,26 @@ using std::string;
 // SDL boilerplate shenanagains
 SDL_Window* window;
 SDL_Renderer* renderer;
-int width  = 854;
+int width  = 720;
 int height = 480;
+int x, y;
 
 SDL_Surface* font;
 SDL_Texture* font_texture;
+
+// touchHLE-specific stuff
+// TODO: scrape app name, version, and icon instead of just placeholders
+struct app {
+    std::string name = "Unknown App";
+    std::string filename;
+    std::string filepath;
+    std::string version = "Unknown";
+    SDL_Texture* icon;
+};
+
+std::vector<app> apps_list;
+int apps_count;
+int scroll_offset = 0;
 
 void load_font() {
     Uint32 rmask, gmask, bmask, amask;
@@ -130,23 +150,101 @@ void draw_text(string text, int x = 0, int y = 0, int scale = 1, int align = 1, 
     return;
 }
 
+void display_background() {
+    // just for fun :)
+    SDL_SetRenderDrawColor(renderer, 1, 0, 2, 255);
+    SDL_RenderClear(renderer);
+}
+
+void display_list() {
+    if (apps_count <= 0) {
+        draw_text("Could not find any apps. =(", width/2, height/2, 1, 0);
+    } else {
+        SDL_Rect icon;
+        icon.w = icon.h = 57;
+        icon.x = 2;
+
+        // draws underlay
+        if (y < (apps_count*64) + (scroll_offset*64)) {
+            SDL_Rect app_box;
+            app_box.x = 0;
+            app_box.y = (y/64) * 64;
+            app_box.w = width;
+            app_box.h = 64;
+
+            SDL_SetRenderDrawColor(renderer, 96, 12, 32, 128);
+            SDL_RenderFillRect(renderer, &app_box);
+        }
+
+        for (int i = 0; i < apps_count; i++) {
+            SDL_Color version_col = {255, 96, 96};
+
+            int app_y_pos = (scroll_offset*64) + (i*64) + 2;
+
+            //draw_text(apps_list[i].name, 64, app_y_pos);
+            draw_text(apps_list[i].filename, 64, app_y_pos + 16, 1, 1, width, {127, 127, 160});
+            //draw_text("iOS version " + apps_list[i].version, 64, app_y_pos + 32, 1, 1, width, version_col);
+
+            icon.y = app_y_pos;
+
+            // placeholder icon
+            SDL_SetRenderDrawColor(renderer, i*16, i*32, i*64, 255);
+            SDL_RenderFillRect(renderer, &icon);
+            draw_text(std::to_string(i), 2, icon.y);
+        }
+    }
+}
+
+void scan_apps() {
+    const std::filesystem::path apps{"touchHLE_apps"};
+
+    if (!std::filesystem::is_directory(apps)) {
+        printf("[!] The apps directory (%s) couldn't be found!\n", apps.string().c_str());
+        return;
+    }
+
+    for (auto& entry: std::filesystem::directory_iterator(apps)) {
+        if (entry.path().extension() == ".ipa") {
+            app app_entry;
+            app_entry.name = "Unknown App";
+            app_entry.version = "Unknown";
+            app_entry.filename = entry.path().filename().string();
+            app_entry.filepath = entry.path().string();
+
+            apps_list.push_back(app_entry);
+        }
+    }
+
+    apps_count = apps_list.size();
+}
+
+void launch_app() {
+    int app = (y/64) - scroll_offset;
+    if (app > apps_count-1) {return;}
+    std::string command = "touchHLE.exe \"" + apps_list[app].filepath + "\"";
+
+    if (system(command.c_str()) != 0) {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "touchHLE encountered an error for whatever reason. Sorry!", window);
+    }
+}
+
 bool init() {
     // initialize SDL stuff
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         printf("[!] Error initializing SDL: %s\n", SDL_GetError());
         return false;
     }
-    
+
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "TRUE");
 
     // create window
-    window = SDL_CreateWindow("Example Program", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("Shannon: A Basic TouchHLE Frontend", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE);
 
     if (window == NULL) {
         printf("[!] Error creating window: %s\n", SDL_GetError());
         return false;
     }
-    
+
     // create renderer
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 
@@ -154,9 +252,10 @@ bool init() {
         printf("[!] Error creating renderer: %s\n", SDL_GetError());
         return false;
     }
-    
+
     load_font();
-    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
     return true;
 }
 
@@ -169,29 +268,49 @@ void kill() {
 int main(int argc, char* args[]) {
     bool program_running = true;
     SDL_Event evt;
-    
+
     if (!init()) {program_running = false; return 1;}
-    
+
+    scan_apps();
+
     while (program_running) {
         while (SDL_PollEvent(&evt) != 0) {
             switch (evt.type) {
                 case SDL_QUIT: program_running = false; break;
-                
+
                 case SDL_WINDOWEVENT:
                     if (evt.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                         SDL_RenderClear(renderer);
                         SDL_GetWindowSize(window, &width, &height);
+                        scroll_offset = 0;
                     }
-                break;
+                    break;
+
+                case SDL_MOUSEWHEEL:
+                    scroll_offset = fmax(fmin(0, scroll_offset + evt.wheel.y), -apps_count + ((float)(apps_count * 64) / height));
+                    break;
+
+                case SDL_MOUSEMOTION:
+                    SDL_GetMouseState(&x, &y);
+                    break;
+
+                case SDL_MOUSEBUTTONDOWN:
+                    if (x > width || x < 0 || y > height || y < 0) {break;}
+                    if (evt.button.button == SDL_BUTTON_LEFT) {
+                        launch_app();
+                    }
+                    break;
             }
         }
-        
-        SDL_SetRenderDrawColor(renderer, 12, 8, 16, 255);
-        SDL_RenderClear(renderer);
-        draw_text("hello world!");
+
+        display_background();
+        display_list();
+        //draw_text(std::to_string(x), width, 0,  1, -1, width, {255, 255, 96});
+        //draw_text(std::to_string(y), width, 16, 1, -1, width, {255, 255, 96});
+
         SDL_RenderPresent(renderer);
     }
-    
+
     kill();
     return 0;
 }

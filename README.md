@@ -1,17 +1,21 @@
-![](https://github.com/SuperFromND/example/assets/22881403/d55f05b0-13e9-47db-8af0-c4b9fefde936)
+![Shannon screenshot](https://github.com/SuperFromND/b/assets/22881403/a3a229d0-16a0-424f-abc7-fe0b70763245)
+
 ---
-# What is this?
-This is a template repository that I created to make it easier for me to start making small tools and projects involving SDL2 and C++. It contains:
-- a basic but functional Makefile
-- a built-in font and drawing function
-- a Hello world! example using the above
+**Shannon** is a basic frontend for the [touchHLE](https://touchhle.org/) emulator.
+
+I created this launcher mostly for my personal use, as touchHLE's current frontend does not allow for more than 16 apps to be displayed, and I had difficulty setting up a Rust enviroment to add pagination support to touchHLE directly. As a result, it only supports Windows and, because of its nature as a launcher of an external program, is very likely to contain security bugs. 
+### **Use at your own risk.**
+# Installing
+[Download the release](https://github.com/SuperFromND/shannon/releases/latest/download/shannon-windows.zip), then extract the contents of the ZIP to the same directory that touchHLE's executable is located in. Double-click and Shannon should open, displaying a list of all apps in the `touchHLE_apps` directory. Navigate the list using the scroll wheel and click a given file to launch it in touchHLE.
+
+Note that touchHLE is in a very early stage of developement right now, so the vast majority of apps will close nearly instantly. Check [their compatiability list](https://github.com/hikari-no-yume/touchHLE/blob/trunk/APP_SUPPORT.md) for known good apps.
 # Building
-You should be able to build this pretty easily as long as you have SDL2 and a C++ compiler ready to go.
+You should be able to compile this pretty easily as long as you have SDL2 and a C++ compiler ready to go.
 ```
-git clone https://github.com/SuperFromND/example.git
-cd example
+git clone https://github.com/SuperFromND/shannon.git
+cd shannon
 make
-make install // Windows users only!
+make install
 ```
 # Licensing
-This source code is [available under the MIT License,](https://raw.githubusercontent.com/SuperFromND/example/master/LICENSE) <3
+Shannon's source code is [available under the MIT License.](https://raw.githubusercontent.com/SuperFromND/example/master/LICENSE) <3
