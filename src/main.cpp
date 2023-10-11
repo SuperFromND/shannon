@@ -223,9 +223,7 @@ void launch_app() {
     if (app > apps_count-1) {return;}
     std::string command = "touchHLE.exe \"" + apps_list[app].filepath + "\"";
 
-    if (system(command.c_str()) != 0) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "touchHLE encountered an error for whatever reason. Sorry!", window);
-    }
+    system(command.c_str());
 }
 
 bool init() {
