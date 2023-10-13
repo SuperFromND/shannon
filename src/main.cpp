@@ -23,6 +23,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <zip.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -55,6 +56,9 @@ struct app {
     std::string version = "Unknown";
     SDL_Texture* icon;
 };
+
+const std::filesystem::path apps{"touchHLE_apps"};
+const std::filesystem::path icon_cache{"shannon_icon_cache"};
 
 std::vector<app> apps_list;
 int apps_count;
@@ -150,6 +154,14 @@ void draw_text(string text, int x = 0, int y = 0, int scale = 1, int align = 1, 
     return;
 }
 
+void extract_icon(const char* file, const char* name) {
+    struct zip_t *zip = zip_open(file, 0, 'r');
+    zip_entry_open(zip, "iTunesArtwork");
+    zip_entry_fread(zip, name);
+    zip_entry_close(zip);
+    zip_close(zip);
+}
+
 void display_background() {
     // just for fun :)
     SDL_SetRenderDrawColor(renderer, 1, 0, 2, 255);
@@ -191,16 +203,21 @@ void display_list() {
             SDL_SetRenderDrawColor(renderer, i*16, i*32, i*64, 255);
             SDL_RenderFillRect(renderer, &icon);
             draw_text(std::to_string(i), 2, icon.y);
+            SDL_SetTextureScaleMode(apps_list[i].icon, SDL_ScaleModeLinear);
+            SDL_RenderCopy(renderer, apps_list[i].icon, NULL, &icon);
         }
     }
 }
 
 void scan_apps() {
-    const std::filesystem::path apps{"touchHLE_apps"};
-
     if (!std::filesystem::is_directory(apps)) {
         printf("[!] The apps directory (%s) couldn't be found!\n", apps.string().c_str());
         return;
+    }
+
+    if (!std::filesystem::is_directory(icon_cache)) {
+        printf("The icon cache directory (%s) couldn't be found! Creating one...\n", icon_cache.string().c_str());
+        std::filesystem::create_directory(icon_cache);
     }
 
     for (auto& entry: std::filesystem::directory_iterator(apps)) {
@@ -211,11 +228,42 @@ void scan_apps() {
             app_entry.filename = entry.path().filename().string();
             app_entry.filepath = entry.path().string();
 
+            std::string cache_path = icon_cache.string() + "/" + app_entry.filename + ".png";
+
+            SDL_Texture* temp;
+            temp = IMG_LoadTexture(renderer, cache_path.c_str());
+
+            if (temp == NULL) {
+                printf("[!]: %s\n", IMG_GetError());
+                extract_icon(app_entry.filepath.c_str(), cache_path.c_str());
+                temp = IMG_LoadTexture(renderer, cache_path.c_str());
+            }
+
+            app_entry.icon = temp;
+
             apps_list.push_back(app_entry);
         }
     }
 
     apps_count = apps_list.size();
+}
+
+void reload_app_icons() {
+    // called when recreating the window
+    for (int i = 0; i < apps_count; i++) {
+        SDL_Texture* temp;
+        std::string cache_path = icon_cache.string() + "/" + apps_list[i].filename + ".png";
+
+        temp = IMG_LoadTexture(renderer, cache_path.c_str());
+
+        if (temp == NULL) {
+            printf("[!]: %s\n", IMG_GetError());
+            extract_icon(apps_list[i].filepath.c_str(), cache_path.c_str());
+            temp = IMG_LoadTexture(renderer, cache_path.c_str());
+        }
+
+        apps_list[i].icon = temp;
+    }
 }
 
 void launch_app() {
@@ -299,6 +347,7 @@ int main(int argc, char* args[]) {
                         SDL_DestroyWindow(window);
                         launch_app();
                         init();
+                        reload_app_icons();
                     }
                     break;
             }
