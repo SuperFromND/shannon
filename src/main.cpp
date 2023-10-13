@@ -342,6 +342,7 @@ int main(int argc, char* args[]) {
 
                 case SDL_MOUSEBUTTONDOWN:
                     if (x > width || x < 0 || y > height || y < 0 || apps_count == 0) {break;}
+                    if (y > (apps_count*64) + (scroll_offset*64)) {break;}
                     if (evt.button.button == SDL_BUTTON_LEFT) {
                         SDL_DestroyRenderer(renderer);
                         SDL_DestroyWindow(window);
