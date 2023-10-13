@@ -3,8 +3,8 @@
 ---
 **Shannon** is a basic frontend for the [touchHLE](https://touchhle.org/) emulator.
 
-I created this launcher mostly for my personal use, as touchHLE's current frontend does not allow for more than 16 apps to be displayed, and I had difficulty setting up a Rust enviroment to add pagination support to touchHLE directly. As a result, it only supports Windows and, because of its nature as a launcher of an external program, is very likely to contain security bugs. 
-### **Use at your own risk.**
+I created this launcher as touchHLE's current frontend does not allow for more than 16 apps to be displayed, and I had difficulty setting up a Rust enviroment to add pagination support to touchHLE directly. This was made mostly for my personal use, and as a result, it only supports Windows at the moment.
+### **Shannon has not been widely tested and may contain security bugs. Use at your own risk.**
 # Installing
 [Download the release](https://github.com/SuperFromND/shannon/releases/latest/download/shannon-windows.zip), then extract the contents of the ZIP to the same directory that touchHLE's executable is located in. Double-click and Shannon should open, displaying a list of all apps in the `touchHLE_apps` directory. Navigate the list using the scroll wheel and click a given file to launch it in touchHLE.
 
