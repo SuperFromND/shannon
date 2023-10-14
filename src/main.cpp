@@ -64,6 +64,8 @@ std::vector<app> apps_list;
 int apps_count;
 int scroll_offset = 0;
 
+bool toggle_pause = false;
+
 void load_font() {
     Uint32 rmask, gmask, bmask, amask;
 
@@ -251,6 +253,32 @@ void display_list() {
     }
 }
 
+void display_options_bar() {
+    SDL_Rect bar, button;
+    bar.x = 0;
+    bar.w = width;
+    bar.y = height - 24;
+    bar.h = 24;
+
+    button.w = button.h = 20;
+    button.y = bar.y + 2;
+    button.x = 2;
+
+    SDL_SetRenderDrawColor(renderer, 64, 0, 96, 128);
+    SDL_RenderFillRect(renderer, &bar);
+    SDL_SetRenderDrawColor(renderer, 64, 0, 96, 255);
+    SDL_RenderFillRect(renderer, &button);
+
+    if (toggle_pause) {
+        SDL_SetRenderDrawColor(renderer, 255, 128, 64, 255);
+        SDL_RenderFillRect(renderer, &button);
+    }
+
+    draw_text("pause console on exit", 28, height - 24);
+
+    draw_text("shannon v1.0.3", width - 2, height - 24, 1, -1);
+}
+
 void scan_apps() {
     if (!std::filesystem::is_directory(apps)) {
         printf("[!] The apps directory (%s) couldn't be found!\n", apps.string().c_str());
@@ -315,6 +343,10 @@ void launch_app() {
     int app = (y/64) - scroll_offset;
     if (app > apps_count-1) {return;}
     std::string command = "touchHLE.exe \"" + apps_list[app].filepath + "\"";
+
+    if (toggle_pause == true) {command += " & pause";}
+
+    printf("%s", command.c_str());
 
     system(command.c_str());
 }
@@ -383,11 +415,21 @@ int main(int argc, char* args[]) {
 
                 case SDL_MOUSEMOTION:
                     SDL_GetMouseState(&x, &y);
+
                     break;
 
                 case SDL_MOUSEBUTTONDOWN:
                     if (x > width || x < 0 || y > height || y < 0 || apps_count == 0) {break;}
+
+                    if (y > height - 24) {
+                        if (x > 2 && x < 22 && y > height-22 && y < height-2) {
+                            toggle_pause = !toggle_pause;
+                        }
+                        break;
+                    }
+
                     if (y > (apps_count*64) + (scroll_offset*64)) {break;}
+
                     if (evt.button.button == SDL_BUTTON_LEFT) {
                         SDL_DestroyRenderer(renderer);
                         SDL_DestroyWindow(window);
@@ -401,6 +443,7 @@ int main(int argc, char* args[]) {
 
         display_background();
         display_list();
+        display_options_bar();
         //draw_text(std::to_string(x), width, 0,  1, -1, width, {255, 255, 96});
         //draw_text(std::to_string(y), width, 16, 1, -1, width, {255, 255, 96});
 
