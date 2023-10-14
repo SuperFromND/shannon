@@ -210,6 +210,20 @@ void display_background() {
     // just for fun :)
     SDL_SetRenderDrawColor(renderer, 8, 0, 16, 255);
     SDL_RenderClear(renderer);
+
+    SDL_Rect box;
+    float time = SDL_GetTicks() * 0.001;
+
+    SDL_SetRenderDrawColor(renderer, 255, 128, 64, 32);
+    for (int i = 0; i < width; i++) {
+        int y = sin(i/(width/2.f) + time) * (height/4) + (height/2);
+        box.x = i;
+        box.y = y;
+        box.h = height - y;
+        box.w = 1;
+
+        SDL_RenderFillRect(renderer, &box);
+    }
 }
 
 void display_list() {
