@@ -452,6 +452,17 @@ int main(int argc, char* args[]) {
                         reload_app_icons();
                     }
                     break;
+
+                case SDL_KEYDOWN:
+                    if (evt.key.keysym.sym == SDLK_PAGEUP) {
+                        scroll_offset = fmax(fmin(0, scroll_offset + 5), -apps_count + ((float)(apps_count * 64) / height));
+                    }
+
+                    if (evt.key.keysym.sym == SDLK_PAGEDOWN) {
+                        scroll_offset = fmax(fmin(0, scroll_offset + -5), -apps_count + ((float)(apps_count * 64) / height));
+                    }
+
+                    break;
             }
         }
 
