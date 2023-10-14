@@ -162,6 +162,39 @@ void extract_icon(const char* file, const char* name) {
     zip_close(zip);
 }
 
+app extract_plist_metadata(const char* file) {
+    app output;
+    struct zip_t *zip = zip_open(file, 0, 'r');
+    std::string info_plist_path = "dummy";
+
+    // the path to get a given IPA's info.plist is NOT trivial or predictable
+    // so the best way to find it, unfortunately, is to just loop over the
+    // entire file until we find the Info.plist file
+    int n = zip_entries_total(zip);
+
+    for (int i = 0; i < n; i++) {
+        zip_entry_openbyindex(zip, i);
+        std::string name = zip_entry_name(zip);
+
+        if (name.find("Info.plist") != std::string::npos) {
+            info_plist_path = name;
+            zip_entry_close(zip);
+            break;
+        }
+
+        zip_entry_close(zip);
+    }
+
+    zip_entry_open(zip, info_plist_path.c_str());
+
+    // TODO: parse the plist here. Probably need to find a library to read Plist binary because I REALLY don't want to write my own. (Apple's code is open-source but I'm unsure of its licensing and it looks to use a lot of extra libs :<)
+
+    zip_entry_close(zip);
+    zip_close(zip);
+
+    return output;
+}
+
 void display_background() {
     // just for fun :)
     SDL_SetRenderDrawColor(renderer, 1, 0, 2, 255);
@@ -228,9 +261,9 @@ void scan_apps() {
             app_entry.filename = entry.path().filename().string();
             app_entry.filepath = entry.path().string();
 
+            SDL_Texture* temp;
             std::string cache_path = icon_cache.string() + "/" + app_entry.filename + ".png";
 
-            SDL_Texture* temp;
             temp = IMG_LoadTexture(renderer, cache_path.c_str());
 
             if (temp == NULL) {
@@ -240,6 +273,8 @@ void scan_apps() {
             }
 
             app_entry.icon = temp;
+
+            extract_plist_metadata(app_entry.filepath.c_str());
 
             apps_list.push_back(app_entry);
         }
