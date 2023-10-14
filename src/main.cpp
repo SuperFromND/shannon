@@ -251,6 +251,7 @@ void scan_apps() {
 void reload_app_icons() {
     // called when recreating the window
     for (int i = 0; i < apps_count; i++) {
+        SDL_DestroyTexture(apps_list[i].icon);
         SDL_Texture* temp;
         std::string cache_path = icon_cache.string() + "/" + apps_list[i].filename + ".png";
 
