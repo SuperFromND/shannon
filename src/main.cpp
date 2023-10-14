@@ -235,7 +235,7 @@ void display_list() {
         icon.x = 2;
 
         // draws underlay
-        if (y < (apps_count*64) + (scroll_offset*64)) {
+        if (y < (apps_count*64) + (scroll_offset*64) && y < height - 24) {
             SDL_Rect app_box;
             app_box.x = 0;
             app_box.y = (y/64) * 64;
