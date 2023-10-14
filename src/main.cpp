@@ -80,6 +80,10 @@ void load_font() {
         amask = 0xff000000;
     }
 
+    // clear out font just in case
+    SDL_FreeSurface(font);
+    SDL_DestroyTexture(font_texture);
+
     font = SDL_CreateRGBSurfaceFrom((void*)fallback_font.pixel_data, fallback_font.width, fallback_font.height, fallback_font.bytes_per_pixel*8, fallback_font.bytes_per_pixel*fallback_font.width, rmask, gmask, bmask, amask);
     font_texture = SDL_CreateTextureFromSurface(renderer, font);
     return;
