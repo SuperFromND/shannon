@@ -208,7 +208,7 @@ app extract_plist_metadata(const char* file) {
 
 void display_background() {
     // just for fun :)
-    SDL_SetRenderDrawColor(renderer, 1, 0, 2, 255);
+    SDL_SetRenderDrawColor(renderer, 8, 0, 16, 255);
     SDL_RenderClear(renderer);
 }
 
@@ -228,7 +228,7 @@ void display_list() {
             app_box.w = width;
             app_box.h = 64;
 
-            SDL_SetRenderDrawColor(renderer, 96, 12, 32, 128);
+            SDL_SetRenderDrawColor(renderer, 64, 0, 96, 128);
             SDL_RenderFillRect(renderer, &app_box);
         }
 
