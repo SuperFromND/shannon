@@ -191,6 +191,11 @@ app extract_plist_metadata(const char* file) {
 
     zip_entry_open(zip, info_plist_path.c_str());
 
+    // read contents of plist into buffer that we can do stuff with
+    void *buf = NULL;
+    size_t bufsize;
+    zip_entry_read(zip, &buf, &bufsize);
+
     // TODO: parse the plist here. Probably need to find a library to read Plist binary because I REALLY don't want to write my own. (Apple's code is open-source but I'm unsure of its licensing and it looks to use a lot of extra libs :<)
 
     zip_entry_close(zip);
