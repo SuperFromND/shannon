@@ -252,7 +252,7 @@ void display_list() {
             int app_y_pos = (scroll_offset*64) + (i*64) + 2;
 
             //draw_text(apps_list[i].name, 64, app_y_pos);
-            draw_text(apps_list[i].filename, 64, app_y_pos + 16, 1, 1, width, {127, 127, 160});
+            draw_text(apps_list[i].filename, 64, app_y_pos + 16); // , 1, 1, width, {127, 127, 160}
             //draw_text("iOS version " + apps_list[i].version, 64, app_y_pos + 32, 1, 1, width, version_col);
 
             icon.y = app_y_pos;
