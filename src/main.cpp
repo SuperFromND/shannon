@@ -161,9 +161,36 @@ void draw_text(string text, int x = 0, int y = 0, int scale = 1, int align = 1, 
 }
 
 void extract_icon(const char* file, const char* name) {
+    int icon_size = 96;
     struct zip_t *zip = zip_open(file, 0, 'r');
     zip_entry_open(zip, "iTunesArtwork");
-    zip_entry_fread(zip, name);
+
+    // read icon file into memory
+    void *buf = NULL;
+    size_t bufsize;
+    zip_entry_read(zip, &buf, &bufsize);
+
+    // create SDL RWops so we can feed the data into a texture
+    SDL_RWops *icon_data = SDL_RWFromMem(buf, bufsize);
+    SDL_Texture *icon_tex, *new_icon_tex;
+    icon_tex = IMG_LoadTexture_RW(renderer, icon_data, 1);
+
+    // create another texture to resize the icon into
+    new_icon_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, icon_size, icon_size);
+
+    SDL_SetRenderTarget(renderer, new_icon_tex);
+    SDL_SetTextureScaleMode(icon_tex, SDL_ScaleModeBest);
+    SDL_RenderCopy(renderer, icon_tex, NULL, NULL);
+
+    // render texture to a surface, then save it as a PNG file
+    SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, icon_size, icon_size, 32, SDL_PIXELFORMAT_ARGB8888);
+    SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, surface->pixels, surface->pitch);
+    IMG_SavePNG(surface, name);
+    SDL_FreeSurface(surface);
+
+    // clean up
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_DestroyTexture(icon_tex);
     zip_entry_close(zip);
     zip_close(zip);
 }
