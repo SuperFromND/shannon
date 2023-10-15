@@ -1,5 +1,4 @@
-![Shannon screenshot](https://github.com/SuperFromND/b/assets/22881403/a3a229d0-16a0-424f-abc7-fe0b70763245)
-
+![Shannon screenshot](https://github.com/SuperFromND/shannon/assets/22881403/b01fe6d6-cb0e-4d4c-a031-f3089be9ca76)
 ---
 **Shannon** is a basic frontend for the [touchHLE](https://touchhle.org/) emulator.
 
